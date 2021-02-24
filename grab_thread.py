@@ -25,8 +25,8 @@ class GrabThread(QObject):
     def set_camera(self, camera):
         self.camera = camera
         if self.virt_cam is None:
-            self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value, height=self.camera.Height.Value, fps=self.camera.BslResultingAcquisitionFrameRate.Value, print_fps=False)
-            self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 4), 255, np.uint8)  # RGBA
+            self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value, height=self.camera.Height.Value, fps=self.camera.BslResultingAcquisitionFrameRate.Value, print_fps=False, pixForm=pyvirtualcam.PixelFormat.AV_PIX_FMT_YUYV422)
+            self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 2), 255, np.uint8)  # Ycbcr422
 
     def run(self):
 
@@ -40,7 +40,7 @@ class GrabThread(QObject):
             grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
             # Image grabbed successfully?
             if grabResult.GrabSucceeded():
-                self.frame[:, :, :3] = grabResult.Array
+                self.frame = grabResult.Array
             else:
                 print("grab Failed")
             grabResult.Release()
