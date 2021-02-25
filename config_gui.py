@@ -70,7 +70,6 @@ class ConfigGui(QWidget):
         if event == QSystemTrayIcon.DoubleClick:
             self.show()
 
-
     def changeEvent(self, event):
         if event.type() == QEvent.WindowStateChange:
             if self.windowState() & Qt.WindowMinimized:
@@ -86,9 +85,9 @@ class ConfigGui(QWidget):
         super().show()
         self.setWindowState(Qt.WindowNoState)
 
-
     def grab_thread_finished(self):
         self.connect_button.setDisabled(False)
+        clearLayout(self.camera_feature_box)
         self.discover_cameras()
 
     def update_avg_fps(self, value):
@@ -165,28 +164,49 @@ def clearLayout(layout):
 class SliderFeature:
 
     def __init__(self, feature, name):
-        self.SLIDER_MAX = 100
-        self.SLIDER_MIN = 0
         self.feature = feature
+        if self.feature.HasInc():
+            self.SLIDER_INC = self.feature.Inc
+        else:
+            self.SLIDER_INC = 0.01
+
+        self.SLIDER_MAX = self.feature.Max
+        self.SLIDER_MIN = self.feature.Min
+
         self.label = QLabel(name)
-        self.slider = QSlider(Qt.Horizontal)
+
+        self.slider = DoubleSlider(self.SLIDER_INC, Qt.Horizontal)
         self.slider.setRange(self.SLIDER_MIN, self.SLIDER_MAX)
-        self.slider.setValue((self.feature.Value - self.feature.Min) / (self.feature.Max - self.feature.Min) * self.SLIDER_MAX)
+        self.slider.setValue(self.feature.Value)
         self.slider.setFixedWidth(200)
-        self.slider.valueChanged[int].connect(self.value_changed)
+        self.slider.doubleValueChanged.connect(self.value_changed_slider)
+
+        self.spin_box = QDoubleSpinBox()
+        self.spin_box.setRange(self.SLIDER_MIN, self.SLIDER_MAX)
+        self.spin_box.setSingleStep(self.SLIDER_INC)
+        self.spin_box.setValue(self.feature.Value)
+        self.spin_box.setFixedWidth(70)
+        self.spin_box.valueChanged.connect(self.value_changed_spin)
 
         self.layout = QHBoxLayout()
         self.layout.addWidget(self.label)
         self.layout.addStretch()
         self.layout.addWidget(self.slider)
+        self.layout.addWidget(self.spin_box)
 
 
     def get_layout(self):
         return self.layout
 
-    def value_changed(self, value):
-        self.feature.Value =  (value / self.SLIDER_MAX) * (self.feature.Max - self.feature.Min) + self.feature.Min
+    def value_changed_spin(self, value):
+        self.feature.Value = value
+        if value != self.slider.value():
+            self.slider.setValue(value)
 
+    def value_changed_slider(self, value):
+        self.feature.Value = value
+        if value != self.spin_box.value():
+            self.spin_box.setValue(value)
 
 class EnumFeature:
 
@@ -211,3 +231,38 @@ class EnumFeature:
     def index_changed(self, index):
         self.feature.Value = self.combobox.currentText()
 
+class DoubleSlider(QSlider):
+
+    # create our our signal that we can connect to if necessary
+    doubleValueChanged = pyqtSignal(float)
+
+    def __init__(self, inc, *args, **kargs):
+        super(DoubleSlider, self).__init__( *args, **kargs)
+        self._inc = inc
+
+        self.valueChanged.connect(self.emitDoubleValueChanged)
+
+    def emitDoubleValueChanged(self):
+        value = float(super(DoubleSlider, self).value()) * self._inc
+        self.doubleValueChanged.emit(value)
+
+    def value(self):
+        return float(super(DoubleSlider, self).value()) * self._inc
+
+    def setMinimum(self, value):
+        return super(DoubleSlider, self).setMinimum(value / self._inc)
+
+    def setMaximum(self, value):
+        return super(DoubleSlider, self).setMaximum(value / self._inc)
+
+    def setRange(self, min_, max_):
+        return super(DoubleSlider, self).setRange(min_ / self._inc, max_ / self._inc)
+
+    def setSingleStep(self, value):
+        return super(DoubleSlider, self).setSingleStep(value / self._inc)
+
+    def singleStep(self):
+        return float(super(DoubleSlider, self).singleStep()) * self._inc
+
+    def setValue(self, value):
+        super(DoubleSlider, self).setValue(int(value / self._inc))
