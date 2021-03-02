@@ -139,16 +139,31 @@ class ConfigGui(QWidget):
             self.connect_button.setText("Open")
             self.camera = None
 
+            self.thread.exit()
+            self.thread.wait()
+
     def setup_camera_features(self):
         clearLayout(self.camera_feature_box)
 
+        if hasattr(self.camera, "BslLightSourcePreset"):
+            self.light_source_enum = EnumFeature(self.camera.BslLightSourcePreset, "LightSource")
+            self.camera_feature_box.addLayout(self.light_source_enum.get_layout())
+
         if hasattr(self.camera, "AutoTargetBrightness"):
-            self.brightness_slider = SliderFeature(self.camera.AutoTargetBrightness, "Brightness")
-            self.camera_feature_box.addLayout(self.brightness_slider.get_layout())
+            self.auto_brightness_slider = SliderFeature(self.camera.AutoTargetBrightness, "AutoBrightness")
+            self.camera_feature_box.addLayout(self.auto_brightness_slider.get_layout())
+
+        if hasattr(self.camera, "Gamma"):
+            self.gamma_slider = SliderFeature(self.camera.Gamma, "Gamma")
+            self.camera_feature_box.addLayout(self.gamma_slider.get_layout())
 
         if hasattr(self.camera, "BslContrast"):
             self.contrast_slider = SliderFeature(self.camera.BslContrast, "Contrast")
             self.camera_feature_box.addLayout(self.contrast_slider.get_layout())
+
+        if hasattr(self.camera, "BslBrightness"):
+            self.brightness_slider = SliderFeature(self.camera.BslBrightness, "Brightness")
+            self.camera_feature_box.addLayout(self.brightness_slider.get_layout())
 
         if hasattr(self.camera, "BslSaturation"):
             self.saturation_slider = SliderFeature(self.camera.BslSaturation, "Saturation")
@@ -158,10 +173,6 @@ class ConfigGui(QWidget):
             self.hue_slider = SliderFeature(self.camera.BslHue, "Hue")
             self.camera_feature_box.addLayout(self.hue_slider.get_layout())
 
-        if hasattr(self.camera, "Gamma"):
-            self.gamma_slider = SliderFeature(self.camera.Gamma, "Gamma")
-            self.camera_feature_box.addLayout(self.gamma_slider.get_layout())
-
         if hasattr(self.camera, "BslSharpnessEnhancement"):
             self.sharpness_slider = SliderFeature(self.camera.BslSharpnessEnhancement, "Sharpness")
             self.camera_feature_box.addLayout(self.sharpness_slider.get_layout())
@@ -170,9 +181,6 @@ class ConfigGui(QWidget):
             self.noise_slider = SliderFeature(self.camera.BslNoiseReduction, "NoiseReduction")
             self.camera_feature_box.addLayout(self.noise_slider.get_layout())
 
-        if hasattr(self.camera, "BslLightSourcePreset"):
-            self.light_source_enum = EnumFeature(self.camera.BslLightSourcePreset, "LightSource")
-            self.camera_feature_box.addLayout(self.light_source_enum.get_layout())
 
 def clearLayout(layout):
   while layout.count():
@@ -233,7 +241,7 @@ class EnumFeature:
         self.feature = feature
         self.label = QLabel(name)
         self.combobox = QComboBox()
-        self.enumText = [e.GetSymbolic() for e in self.feature.GetEntries()]
+        self.enumText = self.feature.GetSymbolics()
         self.combobox.addItems(self.enumText)
         self.combobox.setCurrentText(self.feature.GetCurrentEntry().GetSymbolic())
         self.combobox.currentIndexChanged.connect(self.index_changed)
