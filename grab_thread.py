@@ -37,11 +37,19 @@ class GrabThread(QObject):
 
         if self.virt_cam is None:
             if self.is_color:
-                self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value, height=self.camera.Height.Value, fps=self.camera.BslResultingAcquisitionFrameRate.Value, print_fps=False, pixForm=pyvirtualcam.PixelFormat.AV_PIX_FMT_YUYV422)
+                self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value,
+                                                    height=self.camera.Height.Value,
+                                                    fps=self.camera.BslResultingAcquisitionFrameRate.Value,
+                                                    pixel_format=pyvirtualcam.PixelFormat.YUYV422,
+                                                    delay=0, print_fps=False)
                 self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 2), 255, np.uint8)  # Ycbcr422
             else:
-                self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value, height=self.camera.Height.Value, fps=self.camera.BslResultingAcquisitionFrameRate.Value, print_fps=False, pixForm=pyvirtualcam.PixelFormat.AV_PIX_FMT_GRAY8)
-                self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 1), 255, np.uint8)  # Ycbcr422
+                self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value,
+                                                    height=self.camera.Height.Value,
+                                                    fps=self.camera.BslResultingAcquisitionFrameRate.Value,
+                                                    pixel_format=pyvirtualcam.PixelFormat.GRAY8,
+                                                    delay=0, print_fps=False)
+                self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 1), 255, np.uint8)  # Mono8
 
     def enable_preview(self):
         cv2.namedWindow('Preview', cv2.WINDOW_NORMAL)
