@@ -123,21 +123,28 @@ class ConfigGui(QWidget):
 
     def connect_camera(self):
         if self.camera is None:
-            self.camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(self.full_name_list[self.camera_list.currentIndex()]))
-            self.camera.Open()
+            try:
+                self.camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(self.full_name_list[self.camera_list.currentIndex()]))
+                self.camera.Open()
+            except:
+                QMessageBox.critical(self, "Error", f"Selected Camera\n{self.camera_list.currentText()}\ncould not be opened")
+                self.camera = None
+                return
+
             self.grab_thread.set_camera(self.camera)
             self.preview_toggle.setDisabled(False)
             print("start GrabThread")
             self.thread.start()
-            # update gui
             self.connect_button.setText("Close")
             self.setup_camera_features()
 
         else:
             self.grab_thread.stop()
             self.connect_button.setDisabled(True)
+            self.preview_toggle.setDisabled(True)
             self.connect_button.setText("Open")
             self.camera = None
+            clearLayout(self.camera_feature_box)
 
             self.thread.exit()
             self.thread.wait()
@@ -183,10 +190,15 @@ class ConfigGui(QWidget):
 
 
 def clearLayout(layout):
-  while layout.count():
-    child = layout.takeAt(0)
-    if child.widget():
-      child.widget().deleteLater()
+    if layout is not None:
+         while layout.count():
+             item = layout.takeAt(0)
+             widget = item.widget()
+             if widget is not None:
+                 widget.setParent(None)
+             else:
+                 clearLayout(item.layout())
+
 
 class SliderFeature:
 
