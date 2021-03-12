@@ -29,9 +29,9 @@ class GrabThread(QObject):
     def set_camera(self, camera):
         self.camera = camera
         avail_pix_for = self.camera.PixelFormat.GetSymbolics()
-        self.is_color = "YCbCr422_8" in avail_pix_for
+        self.is_color = "RGB8" in avail_pix_for
         if self.is_color:
-            self.camera.PixelFormat = "YCbCr422_8"
+            self.camera.PixelFormat = "RGB8"
         else:
             self.camera.PixelFormat = "Mono8"
 
@@ -41,7 +41,6 @@ class GrabThread(QObject):
                 self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value,
                                                     height=self.camera.Height.Value,
                                                     fps=self.camera.BslResultingAcquisitionFrameRate.Value,
-                                                    pixel_format=pyvirtualcam.PixelFormat.YUYV422,
                                                     delay=0, print_fps=False)
                 self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 2), 255, np.uint8)  # Ycbcr422
             else:
@@ -83,7 +82,7 @@ class GrabThread(QObject):
                     self.preview_toggle.emit()
                 else:
                     if self.is_color:
-                        img = cv2.cvtColor(self.frame, cv2.COLOR_YUV2BGR_YUY2)
+                        img = cv2.cvtColor(self.frame, cv2.COLOR_RGB2BGR)
                         if len(self.faces) >= 1:
                             draw_face_box(img, self.faces)
 
@@ -93,15 +92,15 @@ class GrabThread(QObject):
                     cv2.waitKey(1)
 
             if i % 10 == 0:
-                img = cv2.cvtColor(self.frame, cv2.COLOR_YUV2BGR_YUY2)
-                faces = set_auto_functions(self.camera, img)
-                if len(faces) >= 1:
-                    self.faces = faces
+                #img = cv2.cvtColor(self.frame, cv2.COLOR_RGB2BGR)
+                #faces = set_auto_functions(self.camera, img)
+                #if len(faces) >= 1:
+                #    self.faces = faces
 
                 self.avg_fps.emit(self.virt_cam._fps_counter.avg_fps)
 
-            if len(self.faces) >= 1:
-                center_face(self.camera, self.faces[0])
+            #if len(self.faces) >= 1:
+            #    center_face(self.camera, self.faces[0])
 
             self.virt_cam.sleep_until_next_frame()
             i += 1
@@ -136,6 +135,10 @@ def set_auto_functions(camera, img):
         set_int_value(camera.AutoFunctionROIHeight, face_height)
         set_int_value(camera.AutoFunctionROIOffsetX, face_abs_start_x)
         set_int_value(camera.AutoFunctionROIOffsetY, face_abs_start_y)
+
+        camera.BalanceWhiteAuto.Value = "Once"
+        camera.ExposureAuto.Value = "Once"
+        camera.GainAuto.Value = "Once"
 
     return faces
 
