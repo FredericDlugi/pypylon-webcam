@@ -62,8 +62,7 @@ class GrabThread(QObject):
             self.preview_thread_send_frame(self.frame)
 
             if i % 10 == 0:
-                img = cv2.cvtColor(self.frame, cv2.COLOR_RGB2BGR)
-                faces = set_auto_functions(self.camera, img)
+                faces = set_auto_functions(self.camera, self.frame)
                 if len(faces) >= 1:
                     self.faces = faces
 

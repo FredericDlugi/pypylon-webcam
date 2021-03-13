@@ -10,7 +10,7 @@ class PreviewThread(QObject):
 
     preview_toggle = pyqtSignal()
     window_name = "Preview"
-
+    vga_resolution = (854, 480)
     def __init__(self):
         super().__init__()
         self.running = True
@@ -22,7 +22,7 @@ class PreviewThread(QObject):
 
     def enable_preview(self):
         cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
-        cv2.resizeWindow(self.window_name, 854, 480)
+        cv2.resizeWindow(self.window_name, self.vga_resolution[0], self.vga_resolution[1])
 
         self.preview_enabled = True
 
@@ -41,8 +41,9 @@ class PreviewThread(QObject):
                     self.preview_toggle.emit()
                     self.preview_enabled = False
                 else:
-                    bgr_img = cv2.cvtColor(self.rgb_img, cv2.COLOR_RGB2BGR)
-                    #cv2.imshow(self.window_name, bgr_img)
-                    #cv2.waitKey(30)
+                    rgb_resized = cv2.resize(self.rgb_img, self.vga_resolution)
+                    bgr_img = cv2.cvtColor(rgb_resized, cv2.COLOR_RGB2BGR)
+                    cv2.imshow(self.window_name, bgr_img)
+                    cv2.waitKey(30)
             else:
                 time.sleep(0.02)

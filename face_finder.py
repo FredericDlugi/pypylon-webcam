@@ -5,7 +5,7 @@ net = cv2.dnn.readNetFromCaffe("res10_300x300_ssd_iter_140000.prototxt", "res10_
 
 def find_faces(img, net, confidence=0.7):
     (h, w) = img.shape[:2]
-    blob = cv2.dnn.blobFromImage(img, 1.0, (300, 300))
+    blob = cv2.dnn.blobFromImage(img, 1.0, (300, 300), swapRB=True)
     faces = []
 
     net.setInput(blob)

@@ -99,8 +99,12 @@ class ConfigGui(QWidget):
     def changeEvent(self, event):
         if event.type() == QEvent.WindowStateChange:
             if self.windowState() & Qt.WindowMinimized:
-                event.ignore()
-                self.hide()
+                if self.preview_enabled:
+                    self.preview_enabled = False
+                    self.preview_toggle.setText("Show Preview")
+                    self.preview_thread.disable_preview()
+                    event.ignore()
+                    self.hide()
                 self.tray_icon.showMessage(
                     "Pylon Webcam",
                     "Application was minimized to Tray",
