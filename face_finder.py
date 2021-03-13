@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
 
-net = cv2.dnn.readNetFromCaffe("res10_300x300_ssd_iter_140000.prototxt", "res10_300x300_ssd_iter_140000.caffemodel")
+#net = cv2.dnn.readNetFromCaffe("res10_300x300_ssd_iter_140000.prototxt", "res10_300x300_ssd_iter_140000_fp16.caffemodel")
+net = cv2.dnn.readNetFromTensorflow('opencv_face_detector_uint8.pb', 'opencv_face_detector.pbtxt')
+
 
 def find_faces(img, net, confidence=0.7):
     (h, w) = img.shape[:2]

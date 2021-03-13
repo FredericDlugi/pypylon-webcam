@@ -20,6 +20,7 @@ class GrabThread(QObject):
         self.virt_cam = None
         self.preview_enabled = False
         self.preview_thread_send_frame = preview_thread_send_frame
+        self.faces = []
 
 
     def stop(self):
