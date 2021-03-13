@@ -42,7 +42,7 @@ class PreviewThread(QObject):
                     self.preview_enabled = False
                 else:
                     bgr_img = cv2.cvtColor(self.rgb_img, cv2.COLOR_RGB2BGR)
-                    cv2.imshow(self.window_name, bgr_img)
-                    cv2.waitKey(30)
+                    #cv2.imshow(self.window_name, bgr_img)
+                    #cv2.waitKey(30)
             else:
                 time.sleep(0.02)
