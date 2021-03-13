@@ -107,7 +107,7 @@ def set_auto_functions(camera, img):
     return faces
 
 def center_face(camera, face):
-    dead_zone = 200
+    dead_zone = 100
     incX = camera.OffsetX.Inc
     incY = camera.OffsetX.Inc
     offX = camera.OffsetX.GetValue()
