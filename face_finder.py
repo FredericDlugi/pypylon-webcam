@@ -5,15 +5,12 @@ net = cv2.dnn.readNetFromCaffe("res10_300x300_ssd_iter_140000.prototxt", "res10_
 
 def find_faces(img, net, confidence=0.7):
     (h, w) = img.shape[:2]
-    mean = np.mean(img,axis=(0,1))
-    #resized_img = cv2.resize(img, (300, 300))
-    blob = cv2.dnn.blobFromImage(img, 1.0,
-        (300, 300), mean)
-
+    blob = cv2.dnn.blobFromImage(img, 1.0, (300, 300))
     faces = []
 
     net.setInput(blob)
     detections = net.forward()
+
     for i in range(0, detections.shape[2]):
         # extract the confidence (i.e., probability) associated with the
         # prediction

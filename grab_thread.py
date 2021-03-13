@@ -12,14 +12,14 @@ class GrabThread(QObject):
 
     avg_fps = pyqtSignal(float)
     finished = pyqtSignal()
-    preview_toggle = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, preview_thread_send_frame):
         super().__init__()
         self.running = True
         self.camera = None
         self.virt_cam = None
         self.preview_enabled = False
+        self.preview_thread_send_frame = preview_thread_send_frame
 
 
     def stop(self):
@@ -28,36 +28,18 @@ class GrabThread(QObject):
 
     def set_camera(self, camera):
         self.camera = camera
-        avail_pix_for = self.camera.PixelFormat.GetSymbolics()
-        self.is_color = "RGB8" in avail_pix_for
-        if self.is_color:
-            self.camera.PixelFormat = "RGB8"
-        else:
-            self.camera.PixelFormat = "Mono8"
-
-
+        self.camera.PixelFormat = "RGB8"
         if self.virt_cam is None:
-            if self.is_color:
-                self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value,
-                                                    height=self.camera.Height.Value,
-                                                    fps=self.camera.BslResultingAcquisitionFrameRate.Value,
-                                                    delay=0, print_fps=False)
-                self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 2), 255, np.uint8)  # Ycbcr422
-            else:
-                self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value,
-                                                    height=self.camera.Height.Value,
-                                                    fps=self.camera.BslResultingAcquisitionFrameRate.Value,
-                                                    pixel_format=pyvirtualcam.PixelFormat.GRAY8,
-                                                    delay=0, print_fps=False)
-                self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 1), 255, np.uint8)  # Mono8
+            self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value,
+                                                height=self.camera.Height.Value,
+                                                fps=self.camera.BslResultingAcquisitionFrameRate.Value,
+                                                delay=0, print_fps=False)
+            self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 3), 255, np.uint8)  # Ycbcr422
 
     def enable_preview(self):
-        cv2.namedWindow('Preview', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow("Preview", 854, 480)
         self.preview_enabled = True
 
     def disable_preview(self):
-        cv2.destroyWindow("Preview")
         self.preview_enabled = False
 
     def run(self):
@@ -77,42 +59,29 @@ class GrabThread(QObject):
             grabResult.Release()
             self.virt_cam.send(self.frame)
 
-            if self.preview_enabled:
-                if cv2.getWindowProperty('Preview',cv2.WND_PROP_VISIBLE) < 1:
-                    self.preview_toggle.emit()
-                else:
-                    if self.is_color:
-                        img = cv2.cvtColor(self.frame, cv2.COLOR_RGB2BGR)
-                        if len(self.faces) >= 1:
-                            draw_face_box(img, self.faces)
-
-                    else:
-                        img = self.frame
-                    cv2.imshow("Preview", img)
-                    cv2.waitKey(1)
+            self.preview_thread_send_frame(self.frame)
 
             if i % 10 == 0:
-                #img = cv2.cvtColor(self.frame, cv2.COLOR_RGB2BGR)
-                #faces = set_auto_functions(self.camera, img)
-                #if len(faces) >= 1:
-                #    self.faces = faces
+                img = cv2.cvtColor(self.frame, cv2.COLOR_RGB2BGR)
+                faces = set_auto_functions(self.camera, img)
+                if len(faces) >= 1:
+                    self.faces = faces
 
                 self.avg_fps.emit(self.virt_cam._fps_counter.avg_fps)
 
-            #if len(self.faces) >= 1:
-            #    center_face(self.camera, self.faces[0])
+            if len(self.faces) >= 1:
+                center_face(self.camera, self.faces[0])
 
             self.virt_cam.sleep_until_next_frame()
             i += 1
 
-        if self.preview_enabled:
-            self.preview_toggle.emit()
 
         self.virt_cam.close()
         self.camera.Close()
         self.virt_cam = None
         self.camera = None
         self.running = True
+        self.preview_enabled = False
         print("finished GrabThread")
         self.finished.emit()
         self.avg_fps.emit(0)

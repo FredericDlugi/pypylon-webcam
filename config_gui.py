@@ -8,7 +8,7 @@ from PyQt5.QtGui import *
 
 class ConfigGui(QWidget):
 
-    def __init__(self, grab_thread):
+    def __init__(self, grab_thread, preview_thread):
         super().__init__()
 
         vbox = QVBoxLayout()
@@ -37,6 +37,7 @@ class ConfigGui(QWidget):
         self.avg_fps_label = QLabel("FPS:  0.00")
         self.footer_box.addWidget(self.avg_fps_label)
         self.footer_box.addStretch()
+        self.preview_enabled = False
         self.preview_toggle = QPushButton("Show Preview")
         self.preview_toggle.setDisabled(True)
         self.preview_toggle.clicked.connect(self.on_preview_toggle)
@@ -48,13 +49,18 @@ class ConfigGui(QWidget):
         self.setup_minimize_to_tray()
 
         self.grab_thread = grab_thread
-        self.grab_thread.finished.connect(self.grab_thread_finished)
-        self.grab_thread.avg_fps.connect(self.update_avg_fps)
-        self.grab_thread.preview_toggle.connect(self.on_preview_toggle)
         self.thread = QThread()
         self.grab_thread.moveToThread(self.thread)
         self.thread.started.connect(self.grab_thread.run)
+        self.grab_thread.finished.connect(self.grab_thread_finished)
+        self.grab_thread.avg_fps.connect(self.update_avg_fps)
 
+        self.preview_thread = preview_thread
+        self.prev_thread = QThread()
+        self.preview_thread.moveToThread(self.prev_thread)
+        self.preview_thread.preview_toggle.connect(self.on_preview_toggle)
+        self.prev_thread.started.connect(self.preview_thread.run)
+        self.prev_thread.start()
         self.show()
 
     def setup_minimize_to_tray(self):
@@ -76,13 +82,15 @@ class ConfigGui(QWidget):
         self.tray_icon.show()
 
     def on_preview_toggle(self):
-        if self.grab_thread.preview_enabled:
+        print(self.preview_thread.preview_enabled)
+        if self.preview_enabled:
             self.preview_toggle.setText("Show Preview")
-            self.grab_thread.disable_preview()
+            self.preview_thread.disable_preview()
         else:
             self.preview_toggle.setText("Disable Preview")
-            self.grab_thread.enable_preview()
+            self.preview_thread.enable_preview()
 
+        self.preview_enabled = not self.preview_enabled
 
     def on_tray_icon_activated(self, event):
         if event == QSystemTrayIcon.DoubleClick:
@@ -142,6 +150,10 @@ class ConfigGui(QWidget):
             self.grab_thread.stop()
             self.connect_button.setDisabled(True)
             self.preview_toggle.setDisabled(True)
+            if self.preview_enabled:
+                self.preview_enabled = False
+                self.preview_toggle.setText("Show Preview")
+                self.preview_thread.disable_preview()
             self.connect_button.setText("Open")
             self.camera = None
             clearLayout(self.camera_feature_box)
