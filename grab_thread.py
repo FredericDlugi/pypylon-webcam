@@ -24,7 +24,6 @@ class GrabThread(QObject):
 
     def stop(self):
         self.running = False
-        print("stopping GrabThread")
 
     def set_camera(self, camera):
         self.camera = camera
@@ -43,7 +42,6 @@ class GrabThread(QObject):
         self.preview_enabled = False
 
     def run(self):
-        print("started GrabThread")
         self.camera.MaxNumBuffer = 20
         self.camera.StartGrabbingMax(1_000_000_000, pylon.GrabStrategy_LatestImages)
         i = 0
@@ -54,8 +52,6 @@ class GrabThread(QObject):
             # Image grabbed successfully?
             if grabResult.GrabSucceeded():
                 self.frame = grabResult.Array
-            else:
-                print("grab Failed")
             grabResult.Release()
             self.virt_cam.send(self.frame)
 
@@ -81,7 +77,6 @@ class GrabThread(QObject):
         self.camera = None
         self.running = True
         self.preview_enabled = False
-        print("finished GrabThread")
         self.finished.emit()
         self.avg_fps.emit(0)
 

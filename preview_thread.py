@@ -31,7 +31,6 @@ class PreviewThread(QObject):
         self.preview_enabled = False
 
     def send_rgb_img(self, frame):
-        #print(frame.shape)
         self.rgb_img = frame
 
     def run(self):

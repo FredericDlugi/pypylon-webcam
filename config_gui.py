@@ -82,7 +82,6 @@ class ConfigGui(QWidget):
         self.tray_icon.show()
 
     def on_preview_toggle(self):
-        print(self.preview_thread.preview_enabled)
         if self.preview_enabled:
             self.preview_toggle.setText("Show Preview")
             self.preview_thread.disable_preview()
@@ -145,7 +144,6 @@ class ConfigGui(QWidget):
 
             self.grab_thread.set_camera(self.camera)
             self.preview_toggle.setDisabled(False)
-            print("start GrabThread")
             self.thread.start()
             self.connect_button.setText("Close")
             self.setup_camera_features()
