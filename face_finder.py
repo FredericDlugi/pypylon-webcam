@@ -28,14 +28,13 @@ def find_faces(img, net, confidence=0.7):
         faces.append((conf, startX, startY, endX, endY))
     return faces
 
-def draw_face_box(img, faces):
-    for i in range(len(faces)):
-        (conf, startX, startY, endX, endY) = faces[i]
+def draw_face_box(img, face):
+        startX = face[0]
+        startY = face[1]
+        endX   = face[2]
+        endY   = face[3]
         # draw the bounding box of the face along with the associated
         # probability
-        text = f"{conf * 100:.2f}%"
         y = startY - 10 if startY - 10 > 10 else startY + 10
         cv2.rectangle(img, (startX, startY), (endX, endY),
             (0, 0, 255), 2)
-        cv2.putText(img, text, (startX, y),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)

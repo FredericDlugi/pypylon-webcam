@@ -8,7 +8,7 @@ from PyQt5.QtGui import *
 
 class ConfigGui(QWidget):
 
-    def __init__(self, grab_thread, preview_thread):
+    def __init__(self, grab_thread, preview_thread, face_detector_thread):
         super().__init__()
 
         vbox = QVBoxLayout()
@@ -61,6 +61,13 @@ class ConfigGui(QWidget):
         self.preview_thread.preview_toggle.connect(self.on_preview_toggle)
         self.prev_thread.started.connect(self.preview_thread.run)
         self.prev_thread.start()
+
+        self.face_detector_thread = face_detector_thread
+        self.face_thread = QThread()
+        self.face_detector_thread.moveToThread(self.face_thread)
+        self.face_thread.started.connect(self.face_detector_thread.run)
+        self.face_thread.start()
+
         self.show()
 
     def setup_minimize_to_tray(self):

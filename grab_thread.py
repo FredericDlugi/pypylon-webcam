@@ -6,21 +6,22 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import cv2
-from face_finder import find_faces, net, draw_face_box
 
 class GrabThread(QObject):
 
     avg_fps = pyqtSignal(float)
+    frame_grabbed = pyqtSignal(np.ndarray)
     finished = pyqtSignal()
+    vga_resolution = (854, 480)
 
-    def __init__(self, preview_thread_send_frame):
+    def __init__(self):
         super().__init__()
         self.running = True
         self.camera = None
         self.virt_cam = None
         self.preview_enabled = False
-        self.preview_thread_send_frame = preview_thread_send_frame
-        self.faces = []
+        self.face = None
+
 
 
     def stop(self):
@@ -29,6 +30,7 @@ class GrabThread(QObject):
     def set_camera(self, camera):
         self.camera = camera
         self.camera.PixelFormat = "BGR8"
+        set_auto_functions(self.camera, np.array([0, 0, self.camera.Width.Value, self.camera.Height.Value]))
         self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value,
                                             height=self.camera.Height.Value,
                                             fps=self.camera.BslResultingAcquisitionFrameRate.Value,
@@ -40,6 +42,10 @@ class GrabThread(QObject):
 
     def disable_preview(self):
         self.preview_enabled = False
+
+    def send_face(self, face):
+        self.face = face
+        set_auto_functions(self.camera, self.face)
 
     def run(self):
         self.camera.MaxNumBuffer = 20
@@ -55,17 +61,13 @@ class GrabThread(QObject):
             grabResult.Release()
             self.virt_cam.send(self.frame, pyvirtualcam.PixelFormat.BGR24)
 
-            self.preview_thread_send_frame(self.frame)
+            self.frame_grabbed.emit(self.frame)
 
             if i % 10 == 0:
-                faces = set_auto_functions(self.camera, self.frame)
-                if len(faces) >= 1:
-                    self.faces = faces
-
                 self.avg_fps.emit(self.virt_cam._fps_counter.avg_fps)
 
-            if len(self.faces) >= 1:
-                center_face(self.camera, self.faces[0])
+            if not self.face is None:
+                center_face(self.camera, self.face)
 
             self.virt_cam.sleep_until_next_frame()
             i += 1
@@ -80,30 +82,30 @@ class GrabThread(QObject):
         self.finished.emit()
         self.avg_fps.emit(0)
 
-def set_auto_functions(camera, img):
-    faces = find_faces(img, net)
+def set_auto_functions(camera, face):
     offX = camera.OffsetX.GetValue()
     offY = camera.OffsetY.GetValue()
 
-    if len(faces) >= 1:
-        (conf, startX, startY, endX, endY) = faces[0]
+    startX = face[0]
+    startY = face[1]
+    endX   = face[2]
+    endY   = face[3]
 
-        face_width =  endX - startX
-        face_height = endY - startY
-        face_abs_start_x = offX + startX
-        face_abs_start_y = offY + startY
+    face_width =  endX - startX
+    face_height = endY - startY
+    face_abs_start_x = offX + startX
+    face_abs_start_y = offY + startY
 
 
-        set_int_value(camera.AutoFunctionROIWidth, face_width)
-        set_int_value(camera.AutoFunctionROIHeight, face_height)
-        set_int_value(camera.AutoFunctionROIOffsetX, face_abs_start_x)
-        set_int_value(camera.AutoFunctionROIOffsetY, face_abs_start_y)
+    set_int_value(camera.AutoFunctionROIWidth, face_width)
+    set_int_value(camera.AutoFunctionROIHeight, face_height)
+    set_int_value(camera.AutoFunctionROIOffsetX, face_abs_start_x)
+    set_int_value(camera.AutoFunctionROIOffsetY, face_abs_start_y)
 
-        camera.BalanceWhiteAuto.Value = "Once"
-        camera.ExposureAuto.Value = "Once"
-        camera.GainAuto.Value = "Once"
+    camera.BalanceWhiteAuto.Value = "Once"
+    camera.ExposureAuto.Value = "Once"
+    camera.GainAuto.Value = "Once"
 
-    return faces
 
 def center_face(camera, face):
     dead_zone = 100
@@ -112,8 +114,10 @@ def center_face(camera, face):
     offX = camera.OffsetX.GetValue()
     offY = camera.OffsetY.GetValue()
 
-
-    (conf, startX, startY, endX, endY) = face
+    startX = face[0]
+    startY = face[1]
+    endX   = face[2]
+    endY   = face[3]
 
     face_width =  endX - startX
     face_height = endY - startY
