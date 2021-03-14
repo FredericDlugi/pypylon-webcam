@@ -41,8 +41,7 @@ class PreviewThread(QObject):
                     self.preview_enabled = False
                 else:
                     rgb_resized = cv2.resize(self.rgb_img, self.vga_resolution)
-                    bgr_img = cv2.cvtColor(rgb_resized, cv2.COLOR_RGB2BGR)
-                    cv2.imshow(self.window_name, bgr_img)
+                    cv2.imshow(self.window_name, rgb_resized)
                     cv2.waitKey(30)
             else:
                 time.sleep(0.02)

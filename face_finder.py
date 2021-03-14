@@ -7,7 +7,7 @@ net = cv2.dnn.readNetFromTensorflow('opencv_face_detector_uint8.pb', 'opencv_fac
 
 def find_faces(img, net, confidence=0.7):
     (h, w) = img.shape[:2]
-    blob = cv2.dnn.blobFromImage(img, 1.0, (300, 300), swapRB=True)
+    blob = cv2.dnn.blobFromImage(img, 1.0, (300, 300))
     faces = []
 
     net.setInput(blob)
