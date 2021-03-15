@@ -21,6 +21,7 @@ class GrabThread(QObject):
         self.virt_cam = None
         self.preview_enabled = False
         self.face = None
+        self.face_id = 0
 
 
 
@@ -30,7 +31,6 @@ class GrabThread(QObject):
     def set_camera(self, camera):
         self.camera = camera
         self.camera.PixelFormat = "BGR8"
-        set_auto_functions(self.camera, np.array([0, 0, self.camera.Width.Value, self.camera.Height.Value]))
         self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value,
                                             height=self.camera.Height.Value,
                                             fps=self.camera.BslResultingAcquisitionFrameRate.Value,
@@ -44,13 +44,15 @@ class GrabThread(QObject):
         self.preview_enabled = False
 
     def send_face(self, face):
+        self.face_id += 1
         self.face = face
-        set_auto_functions(self.camera, self.face)
 
     def run(self):
         self.camera.MaxNumBuffer = 20
         self.camera.StartGrabbingMax(1_000_000_000, pylon.GrabStrategy_LatestImages)
         i = 0
+        num_frames_no_face = 0
+        last_id = 0
         while self.running:
 
 
@@ -66,9 +68,21 @@ class GrabThread(QObject):
             if i % 10 == 0:
                 self.avg_fps.emit(self.virt_cam._fps_counter.avg_fps)
 
+
             if not self.face is None:
                 center_face(self.camera, self.face)
 
+                if self.face_id != last_id:
+                    last_id = self.face_id
+                    set_auto_functions(self.camera, self.face)
+                    num_frames_no_face = 0
+                else:
+                    if num_frames_no_face > 200:
+                        self.face = None
+                    num_frames_no_face += 1
+
+            else:
+                set_auto_functions(self.camera, np.array([0, 0, self.camera.Width.Value, self.camera.Height.Value]))
             self.virt_cam.sleep_until_next_frame()
             i += 1
 
@@ -78,6 +92,7 @@ class GrabThread(QObject):
         self.virt_cam = None
         self.camera = None
         self.running = True
+        self.face = None
         self.preview_enabled = False
         self.finished.emit()
         self.avg_fps.emit(0)

@@ -24,12 +24,10 @@ class PreviewThread(QObject):
 
     def enable_preview(self):
         cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
+        self.preview_enabled = True
         cv2.resizeWindow(self.window_name, self.vga_resolution[0], self.vga_resolution[1])
 
-        self.preview_enabled = True
-
     def disable_preview(self):
-        cv2.destroyWindow(self.window_name)
         self.preview_enabled = False
 
     def send_frame(self, frame):
@@ -41,7 +39,7 @@ class PreviewThread(QObject):
     def run(self):
         while self.running:
             if self.preview_enabled:
-                if cv2.getWindowProperty(self.window_name,cv2.WND_PROP_VISIBLE) < 1:
+                if cv2.getWindowProperty(self.window_name, cv2.WND_PROP_VISIBLE) < 1:
                     self.preview_toggle.emit()
                     self.preview_enabled = False
                 else:
@@ -50,4 +48,5 @@ class PreviewThread(QObject):
                     cv2.imshow(self.window_name, self.frame)
                     cv2.waitKey(30)
             else:
-                time.sleep(0.02)
+                cv2.destroyWindow(self.window_name)
+                time.sleep(0.03)
