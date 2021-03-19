@@ -11,7 +11,7 @@ class FaceDetectorThread(QObject):
 
     found_face = pyqtSignal(np.ndarray)
 
-    fps = 2
+    fps = 0.1
     def __init__(self):
         super().__init__()
         self.running = True

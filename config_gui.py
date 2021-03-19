@@ -109,8 +109,8 @@ class ConfigGui(QWidget):
                     self.preview_enabled = False
                     self.preview_toggle.setText("Show Preview")
                     self.preview_thread.disable_preview()
-                    event.ignore()
-                    self.hide()
+                event.ignore()
+                self.hide()
                 self.tray_icon.showMessage(
                     "Pylon Webcam",
                     "Application was minimized to Tray",

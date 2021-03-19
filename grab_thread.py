@@ -34,7 +34,7 @@ class GrabThread(QObject):
         self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value,
                                             height=self.camera.Height.Value,
                                             fps=self.camera.BslResultingAcquisitionFrameRate.Value,
-                                            delay=0, print_fps=False)
+                                            delay=0, print_fps=False, fmt=pyvirtualcam.PixelFormat.BGR)
         self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 3), 255, np.uint8)
 
     def enable_preview(self):
@@ -61,7 +61,7 @@ class GrabThread(QObject):
             if grabResult.GrabSucceeded():
                 self.frame = grabResult.Array
             grabResult.Release()
-            self.virt_cam.send(self.frame, pyvirtualcam.PixelFormat.BGR24)
+            self.virt_cam.send(self.frame)
 
             self.frame_grabbed.emit(self.frame)
 
@@ -77,7 +77,7 @@ class GrabThread(QObject):
                     set_auto_functions(self.camera, self.face)
                     num_frames_no_face = 0
                 else:
-                    if num_frames_no_face > 200:
+                    if num_frames_no_face > self.virt_cam.fps * 11:
                         self.face = None
                     num_frames_no_face += 1
 
