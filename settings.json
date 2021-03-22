@@ -1,0 +1,6 @@
+{
+    "color" : true,
+    "input_resolution" : [1920, 1080],
+    "output_resolution" : [1280, 720],
+    "preview_resolution" : [854, 480]
+}

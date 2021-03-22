@@ -2,6 +2,6 @@
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": false,
     "python.linting.enabled": true,
-    "python.pythonPath": "C:\\ProgramData\\Anaconda3\\python.exe",
+    "python.pythonPath": "C:\\Users\\fdlugi\\AppData\\Local\\Continuum\\anaconda3\\envs\\pyvirtualcam\\python.exe",
     "python.linting.banditEnabled": true
 }

@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import cv2
+import settings
 
 class GrabThread(QObject):
 
@@ -31,8 +32,12 @@ class GrabThread(QObject):
     def set_camera(self, camera):
         self.camera = camera
         self.camera.PixelFormat = "BGR8"
-        self.virt_cam = pyvirtualcam.Camera(width=self.camera.Width.Value,
-                                            height=self.camera.Height.Value,
+        self.input_res = settings.get_setting("input_resolution", [self.camera.Width.Value, self.camera.Height.Value])
+        self.output_res = settings.get_setting("output_resolution", [self.camera.Width.Value, self.camera.Height.Value])
+        self.camera.Width  = self.input_res[0]
+        self.camera.Height = self.input_res[1]
+        self.virt_cam = pyvirtualcam.Camera(width=self.output_res[0],
+                                            height=self.output_res[1],
                                             fps=self.camera.BslResultingAcquisitionFrameRate.Value,
                                             delay=0, print_fps=False, fmt=pyvirtualcam.PixelFormat.BGR)
         self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 3), 255, np.uint8)
@@ -59,7 +64,10 @@ class GrabThread(QObject):
             grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
             # Image grabbed successfully?
             if grabResult.GrabSucceeded():
-                self.frame = grabResult.Array
+                if self.output_res != self.input_res:
+                    self.frame = cv2.resize(grabResult.Array, tuple(self.output_res))
+                else:
+                    self.frame = grabResult.Array
             grabResult.Release()
             self.virt_cam.send(self.frame)
 
