@@ -64,12 +64,13 @@ class GrabThread(QObject):
             grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
             # Image grabbed successfully?
             if grabResult.GrabSucceeded():
-                if self.output_res != self.input_res:
-                    self.frame = cv2.resize(grabResult.Array, tuple(self.output_res))
-                else:
-                    self.frame = grabResult.Array
+                self.frame = grabResult.Array
             grabResult.Release()
-            self.virt_cam.send(self.frame)
+
+            if self.output_res != self.input_res:
+                self.virt_cam.send(cv2.resize(self.frame, tuple(self.output_res)))
+            else:
+                self.virt_cam.send(self.frame)
 
             self.frame_grabbed.emit(self.frame)
 
