@@ -1,6 +1,8 @@
 {
     "color" : true,
     "input_resolution" : [1920, 1080],
-    "output_resolution" : [1280, 720],
-    "preview_resolution" : [854, 480]
+    "output_resolution" : [1920, 1080],
+    "preview_resolution" : [854, 480],
+    "fps" : 30,
+    "max_exposure_time" : 15000
 }

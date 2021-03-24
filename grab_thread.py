@@ -34,11 +34,15 @@ class GrabThread(QObject):
         self.camera.PixelFormat = "BGR8"
         self.input_res = settings.get_setting("input_resolution", [self.camera.Width.Value, self.camera.Height.Value])
         self.output_res = settings.get_setting("output_resolution", [self.camera.Width.Value, self.camera.Height.Value])
+        self.fps = settings.get_setting("fps", 30)
         self.camera.Width  = self.input_res[0]
         self.camera.Height = self.input_res[1]
+        self.camera.AcquisitionFrameRate = self.fps
+        self.camera.AcquisitionFrameRateEnable = True
+        self.camera.AutoExposureTimeUpperLimit = settings.get_setting("max_exposure_time", 15000)
         self.virt_cam = pyvirtualcam.Camera(width=self.output_res[0],
                                             height=self.output_res[1],
-                                            fps=self.camera.BslResultingAcquisitionFrameRate.Value,
+                                            fps=self.fps,
                                             delay=0, print_fps=False, fmt=pyvirtualcam.PixelFormat.BGR)
         self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 3), 255, np.uint8)
 
