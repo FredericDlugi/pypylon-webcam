@@ -43,7 +43,7 @@ class GrabThread(QObject):
         self.virt_cam = pyvirtualcam.Camera(width=self.output_res[0],
                                             height=self.output_res[1],
                                             fps=self.fps,
-                                            delay=0, print_fps=False, fmt=pyvirtualcam.PixelFormat.BGR)
+                                            print_fps=False, fmt=pyvirtualcam.PixelFormat.BGR)
         self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 3), 255, np.uint8)
 
     def enable_preview(self):
@@ -64,12 +64,14 @@ class GrabThread(QObject):
         last_id = 0
         while self.running:
 
-
-            grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
-            # Image grabbed successfully?
-            if grabResult.GrabSucceeded():
-                self.frame = grabResult.Array
-            grabResult.Release()
+            try:
+                grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
+                # Image grabbed successfully?
+                if grabResult.GrabSucceeded():
+                    self.frame = grabResult.Array
+                grabResult.Release()
+            except genicam.GenericException as e:
+                self.running = False
 
             if self.output_res != self.input_res:
                 self.virt_cam.send(cv2.resize(self.frame, tuple(self.output_res)))
