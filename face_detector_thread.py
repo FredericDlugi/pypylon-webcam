@@ -1,22 +1,21 @@
 import numpy as np
-import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import cv2
 import time
 from face_finder import find_faces, net
+
 
 class FaceDetectorThread(QObject):
 
     found_face = pyqtSignal(np.ndarray)
 
     fps = 0.1
+
     def __init__(self):
         super().__init__()
         self.running = True
         self.frame = None
-
 
     def stop(self):
         self.running = False
@@ -41,5 +40,3 @@ class FaceDetectorThread(QObject):
                 elapsed_time = 0
             # sleep the rest of the time
             time.sleep(max(1/self.fps - elapsed_time, 0))
-
-

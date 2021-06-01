@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 
-#net = cv2.dnn.readNetFromCaffe("res10_300x300_ssd_iter_140000.prototxt", "res10_300x300_ssd_iter_140000_fp16.caffemodel")
-net = cv2.dnn.readNetFromTensorflow('opencv_face_detector_uint8.pb', 'opencv_face_detector.pbtxt')
+net = cv2.dnn.readNetFromTensorflow(
+    'opencv_face_detector_uint8.pb', 'opencv_face_detector.pbtxt')
 
 
 def find_faces(img, net, confidence=0.7):
@@ -28,13 +28,14 @@ def find_faces(img, net, confidence=0.7):
         faces.append((conf, startX, startY, endX, endY))
     return faces
 
+
 def draw_face_box(img, face):
-        startX = face[0]
-        startY = face[1]
-        endX   = face[2]
-        endY   = face[3]
-        # draw the bounding box of the face along with the associated
-        # probability
-        y = startY - 10 if startY - 10 > 10 else startY + 10
-        cv2.rectangle(img, (startX, startY), (endX, endY),
-            (0, 0, 255), 2)
+    startX = face[0]
+    startY = face[1]
+    endX = face[2]
+    endY = face[3]
+    # draw the bounding box of the face along with the associated
+    # probability
+    y = startY - 10 if startY - 10 > 10 else startY + 10
+    cv2.rectangle(img, (startX, startY), (endX, endY),
+                  (0, 0, 255), 2)

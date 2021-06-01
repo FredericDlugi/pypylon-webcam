@@ -1,6 +1,3 @@
-import numpy as np
-import pyvirtualcam
-from pypylon import pylon
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *

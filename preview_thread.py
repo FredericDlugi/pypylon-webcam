@@ -1,5 +1,3 @@
-import numpy as np
-import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -8,17 +6,18 @@ import time
 from face_finder import draw_face_box
 import settings
 
+
 class PreviewThread(QObject):
 
     preview_toggle = pyqtSignal()
     window_name = "Preview"
     vga_resolution = (854, 480)
+
     def __init__(self):
         super().__init__()
         self.running = True
         self.preview_enabled = False
         self.face = None
-
 
     def stop(self):
         self.running = False
@@ -26,7 +25,8 @@ class PreviewThread(QObject):
     def enable_preview(self):
         cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
         self.preview_enabled = True
-        resolution = settings.get_setting("preview_resolution", self.vga_resolution)
+        resolution = settings.get_setting(
+            "preview_resolution", self.vga_resolution)
         cv2.resizeWindow(self.window_name, resolution[0], resolution[1])
 
     def disable_preview(self):

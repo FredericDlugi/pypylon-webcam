@@ -1,12 +1,12 @@
 import numpy as np
 import pyvirtualcam
 from pypylon import pylon
-import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import cv2
 import settings
+
 
 class GrabThread(QObject):
 
@@ -24,27 +24,29 @@ class GrabThread(QObject):
         self.face = None
         self.face_id = 0
 
-
-
     def stop(self):
         self.running = False
 
     def set_camera(self, camera):
         self.camera = camera
         self.camera.PixelFormat = "BGR8"
-        self.input_res = settings.get_setting("input_resolution", [self.camera.Width.Value, self.camera.Height.Value])
-        self.output_res = settings.get_setting("output_resolution", [self.camera.Width.Value, self.camera.Height.Value])
+        self.input_res = settings.get_setting(
+            "input_resolution", [self.camera.Width.Value, self.camera.Height.Value])
+        self.output_res = settings.get_setting(
+            "output_resolution", [self.camera.Width.Value, self.camera.Height.Value])
         self.fps = settings.get_setting("fps", 30)
-        self.camera.Width  = self.input_res[0]
+        self.camera.Width = self.input_res[0]
         self.camera.Height = self.input_res[1]
         self.camera.AcquisitionFrameRate = self.fps
         self.camera.AcquisitionFrameRateEnable = True
-        self.camera.AutoExposureTimeUpperLimit = settings.get_setting("max_exposure_time", 15000)
+        self.camera.AutoExposureTimeUpperLimit = settings.get_setting(
+            "max_exposure_time", 15000)
         self.virt_cam = pyvirtualcam.Camera(width=self.output_res[0],
                                             height=self.output_res[1],
                                             fps=self.fps,
                                             print_fps=False, fmt=pyvirtualcam.PixelFormat.BGR)
-        self.frame = np.full((self.camera.Height.Value, self.camera.Width.Value, 3), 255, np.uint8)
+        self.frame = np.full(
+            (self.camera.Height.Value, self.camera.Width.Value, 3), 255, np.uint8)
 
     def enable_preview(self):
         self.preview_enabled = True
@@ -58,14 +60,16 @@ class GrabThread(QObject):
 
     def run(self):
         self.camera.MaxNumBuffer = 20
-        self.camera.StartGrabbingMax(1_000_000_000, pylon.GrabStrategy_LatestImages)
+        self.camera.StartGrabbingMax(
+            1_000_000_000, pylon.GrabStrategy_LatestImages)
         i = 0
         num_frames_no_face = 0
         last_id = 0
         while self.running:
 
             try:
-                grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
+                grabResult = self.camera.RetrieveResult(
+                    5000, pylon.TimeoutHandling_Return)
                 # Image grabbed successfully?
                 if grabResult.GrabSucceeded():
                     self.frame = grabResult.Array
@@ -74,7 +78,8 @@ class GrabThread(QObject):
                 self.running = False
 
             if self.output_res != self.input_res:
-                self.virt_cam.send(cv2.resize(self.frame, tuple(self.output_res)))
+                self.virt_cam.send(cv2.resize(
+                    self.frame, tuple(self.output_res)))
             else:
                 self.virt_cam.send(self.frame)
 
@@ -82,7 +87,6 @@ class GrabThread(QObject):
 
             if i % 10 == 0:
                 self.avg_fps.emit(self.virt_cam._fps_counter.avg_fps)
-
 
             if not self.face is None:
                 center_face(self.camera, self.face)
@@ -97,10 +101,10 @@ class GrabThread(QObject):
                     num_frames_no_face += 1
 
             else:
-                set_auto_functions(self.camera, np.array([0, 0, self.camera.Width.Value, self.camera.Height.Value]))
+                set_auto_functions(self.camera, np.array(
+                    [0, 0, self.camera.Width.Value, self.camera.Height.Value]))
             self.virt_cam.sleep_until_next_frame()
             i += 1
-
 
         self.virt_cam.close()
         self.camera.Close()
@@ -112,20 +116,20 @@ class GrabThread(QObject):
         self.finished.emit()
         self.avg_fps.emit(0)
 
+
 def set_auto_functions(camera, face):
     offX = camera.OffsetX.GetValue()
     offY = camera.OffsetY.GetValue()
 
     startX = face[0]
     startY = face[1]
-    endX   = face[2]
-    endY   = face[3]
+    endX = face[2]
+    endY = face[3]
 
-    face_width =  endX - startX
+    face_width = endX - startX
     face_height = endY - startY
     face_abs_start_x = offX + startX
     face_abs_start_y = offY + startY
-
 
     set_int_value(camera.AutoFunctionROIWidth, face_width)
     set_int_value(camera.AutoFunctionROIHeight, face_height)
@@ -146,10 +150,10 @@ def center_face(camera, face):
 
     startX = face[0]
     startY = face[1]
-    endX   = face[2]
-    endY   = face[3]
+    endX = face[2]
+    endY = face[3]
 
-    face_width =  endX - startX
+    face_width = endX - startX
     face_height = endY - startY
 
     face_center_x = startX + face_width // 2
@@ -165,8 +169,7 @@ def center_face(camera, face):
     else:
         new_off_x = offX
 
-
-    if face_center_y < ((height/2)- dead_zone):
+    if face_center_y < ((height/2) - dead_zone):
         new_off_y = offY - incY
     elif face_center_y > ((height/2) + dead_zone):
         new_off_y = offY + incY

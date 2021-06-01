@@ -1,10 +1,8 @@
-import numpy as np
-import pyvirtualcam
 from pypylon import pylon
-import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+
 
 class ConfigGui(QWidget):
 
@@ -43,7 +41,7 @@ class ConfigGui(QWidget):
         self.preview_toggle.clicked.connect(self.on_preview_toggle)
         self.footer_box.addWidget(self.preview_toggle)
         self.setLayout(vbox)
-        self.setGeometry(50,50,320,200)
+        self.setGeometry(50, 50, 320, 200)
         self.setWindowTitle("Pylon Webcam")
 
         self.setup_minimize_to_tray()
@@ -142,10 +140,12 @@ class ConfigGui(QWidget):
     def connect_camera(self):
         if self.camera is None:
             try:
-                self.camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(self.full_name_list[self.camera_list.currentIndex()]))
+                self.camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(
+                    self.full_name_list[self.camera_list.currentIndex()]))
                 self.camera.Open()
             except:
-                QMessageBox.critical(self, "Error", f"Selected Camera\n{self.camera_list.currentText()}\ncould not be opened")
+                QMessageBox.critical(
+                    self, "Error", f"Selected Camera\n{self.camera_list.currentText()}\ncould not be opened")
                 self.camera = None
                 return
 
@@ -174,51 +174,64 @@ class ConfigGui(QWidget):
         clearLayout(self.camera_feature_box)
 
         if hasattr(self.camera, "BslLightSourcePreset"):
-            self.light_source_enum = EnumFeature(self.camera.BslLightSourcePreset, "LightSource")
-            self.camera_feature_box.addLayout(self.light_source_enum.get_layout())
+            self.light_source_enum = EnumFeature(
+                self.camera.BslLightSourcePreset, "LightSource")
+            self.camera_feature_box.addLayout(
+                self.light_source_enum.get_layout())
 
         if hasattr(self.camera, "AutoTargetBrightness"):
-            self.auto_brightness_slider = SliderFeature(self.camera.AutoTargetBrightness, "AutoBrightness")
-            self.camera_feature_box.addLayout(self.auto_brightness_slider.get_layout())
+            self.auto_brightness_slider = SliderFeature(
+                self.camera.AutoTargetBrightness, "AutoBrightness")
+            self.camera_feature_box.addLayout(
+                self.auto_brightness_slider.get_layout())
 
         if hasattr(self.camera, "Gamma"):
             self.gamma_slider = SliderFeature(self.camera.Gamma, "Gamma")
             self.camera_feature_box.addLayout(self.gamma_slider.get_layout())
 
         if hasattr(self.camera, "BslContrast"):
-            self.contrast_slider = SliderFeature(self.camera.BslContrast, "Contrast")
-            self.camera_feature_box.addLayout(self.contrast_slider.get_layout())
+            self.contrast_slider = SliderFeature(
+                self.camera.BslContrast, "Contrast")
+            self.camera_feature_box.addLayout(
+                self.contrast_slider.get_layout())
 
         if hasattr(self.camera, "BslBrightness"):
-            self.brightness_slider = SliderFeature(self.camera.BslBrightness, "Brightness")
-            self.camera_feature_box.addLayout(self.brightness_slider.get_layout())
+            self.brightness_slider = SliderFeature(
+                self.camera.BslBrightness, "Brightness")
+            self.camera_feature_box.addLayout(
+                self.brightness_slider.get_layout())
 
         if hasattr(self.camera, "BslSaturation"):
-            self.saturation_slider = SliderFeature(self.camera.BslSaturation, "Saturation")
-            self.camera_feature_box.addLayout(self.saturation_slider.get_layout())
+            self.saturation_slider = SliderFeature(
+                self.camera.BslSaturation, "Saturation")
+            self.camera_feature_box.addLayout(
+                self.saturation_slider.get_layout())
 
         if hasattr(self.camera, "BslHue"):
             self.hue_slider = SliderFeature(self.camera.BslHue, "Hue")
             self.camera_feature_box.addLayout(self.hue_slider.get_layout())
 
         if hasattr(self.camera, "BslSharpnessEnhancement"):
-            self.sharpness_slider = SliderFeature(self.camera.BslSharpnessEnhancement, "Sharpness")
-            self.camera_feature_box.addLayout(self.sharpness_slider.get_layout())
+            self.sharpness_slider = SliderFeature(
+                self.camera.BslSharpnessEnhancement, "Sharpness")
+            self.camera_feature_box.addLayout(
+                self.sharpness_slider.get_layout())
 
         if hasattr(self.camera, "BslNoiseReduction"):
-            self.noise_slider = SliderFeature(self.camera.BslNoiseReduction, "NoiseReduction")
+            self.noise_slider = SliderFeature(
+                self.camera.BslNoiseReduction, "NoiseReduction")
             self.camera_feature_box.addLayout(self.noise_slider.get_layout())
 
 
 def clearLayout(layout):
     if layout is not None:
-         while layout.count():
-             item = layout.takeAt(0)
-             widget = item.widget()
-             if widget is not None:
-                 widget.setParent(None)
-             else:
-                 clearLayout(item.layout())
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.setParent(None)
+            else:
+                clearLayout(item.layout())
 
 
 class SliderFeature:
@@ -254,7 +267,6 @@ class SliderFeature:
         self.layout.addWidget(self.slider)
         self.layout.addWidget(self.spin_box)
 
-
     def get_layout(self):
         return self.layout
 
@@ -268,6 +280,7 @@ class SliderFeature:
         if value != self.spin_box.value():
             self.spin_box.setValue(value)
 
+
 class EnumFeature:
 
     def __init__(self, feature, name):
@@ -276,7 +289,8 @@ class EnumFeature:
         self.combobox = QComboBox()
         self.enumText = self.feature.GetSymbolics()
         self.combobox.addItems(self.enumText)
-        self.combobox.setCurrentText(self.feature.GetCurrentEntry().GetSymbolic())
+        self.combobox.setCurrentText(
+            self.feature.GetCurrentEntry().GetSymbolic())
         self.combobox.currentIndexChanged.connect(self.index_changed)
 
         self.layout = QHBoxLayout()
@@ -284,12 +298,12 @@ class EnumFeature:
         self.layout.addStretch()
         self.layout.addWidget(self.combobox)
 
-
     def get_layout(self):
         return self.layout
 
     def index_changed(self, index):
         self.feature.Value = self.combobox.currentText()
+
 
 class DoubleSlider(QSlider):
 
@@ -297,7 +311,7 @@ class DoubleSlider(QSlider):
     doubleValueChanged = pyqtSignal(float)
 
     def __init__(self, inc, *args, **kargs):
-        super(DoubleSlider, self).__init__( *args, **kargs)
+        super(DoubleSlider, self).__init__(*args, **kargs)
         self._inc = inc
 
         self.valueChanged.connect(self.emitDoubleValueChanged)
